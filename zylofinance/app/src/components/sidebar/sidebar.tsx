@@ -17,7 +17,9 @@ export const Sidebar = ({ children }: SidebarProps) => {
         <div className="sidebar-top">
           {/* Logo */}
           <div className="sidebar-logo">
-            <span className="sidebar-logo-icon">Z</span>
+            <div className="sidebar-logo-wrapper">
+              <span className="sidebar-logo-text">Z</span>
+            </div>
           </div>
 
           {/* Navigation Icons */}
@@ -29,8 +31,8 @@ export const Sidebar = ({ children }: SidebarProps) => {
               title="Dashboard"
             >
               <svg
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -50,8 +52,8 @@ export const Sidebar = ({ children }: SidebarProps) => {
               title="Analytics"
             >
               <svg
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -70,8 +72,8 @@ export const Sidebar = ({ children }: SidebarProps) => {
               title="Wallet"
             >
               <svg
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -83,15 +85,15 @@ export const Sidebar = ({ children }: SidebarProps) => {
               </svg>
             </button>
 
-            {/* Swap/Exchange Icon */}
+            {/* Send/Receive Icon */}
             <button
-              className={`sidebar-tab ${activeTab === 'swap' ? 'active' : ''}`}
-              onClick={() => setActiveTab('swap')}
-              title="Swap"
+              className={`sidebar-tab ${activeTab === 'send' ? 'active' : ''}`}
+              onClick={() => setActiveTab('send')}
+              title="Send & Receive"
             >
               <svg
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -102,6 +104,27 @@ export const Sidebar = ({ children }: SidebarProps) => {
               </svg>
             </button>
 
+            {/* Swap Icon */}
+            <button
+              className={`sidebar-tab ${activeTab === 'swap' ? 'active' : ''}`}
+              onClick={() => setActiveTab('swap')}
+              title="Swap"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="17 1 21 5 17 9" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <polyline points="7 23 3 19 7 15" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+            </button>
+
             {/* History Icon */}
             <button
               className={`sidebar-tab ${activeTab === 'history' ? 'active' : ''}`}
@@ -109,8 +132,8 @@ export const Sidebar = ({ children }: SidebarProps) => {
               title="History"
             >
               <svg
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -132,8 +155,8 @@ export const Sidebar = ({ children }: SidebarProps) => {
             title="Settings"
           >
             <svg
-              width="22"
-              height="22"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

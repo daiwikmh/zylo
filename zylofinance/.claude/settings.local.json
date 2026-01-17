@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun pm:*)"
+      "Bash(bun pm:*)",
+      "WebFetch(domain:docs.metamask.io)"
     ]
   }
 }

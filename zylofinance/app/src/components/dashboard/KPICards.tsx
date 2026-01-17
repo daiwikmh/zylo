@@ -47,7 +47,7 @@ export const KPICards = () => {
           </svg>
         }
         value={formatBalance()}
-        label="Your bank balance"
+        // label="Your bank balance"
       />
 
       {/* Uncategorized Transactions */}
@@ -59,7 +59,7 @@ export const KPICards = () => {
           </svg>
         }
         value="12"
-        label="Uncategorized transactions"
+        // label="Uncategorized transactions"
       />
 
       {/* Active Users */}
@@ -73,7 +73,7 @@ export const KPICards = () => {
           </svg>
         }
         value="7"
-        label="Employees working today"
+        // label="Employees working today"
       />
 
       {/* Weekly Spending */}
@@ -85,7 +85,7 @@ export const KPICards = () => {
           </svg>
         }
         value="$3,287.49"
-        label="This week's card spending"
+        // label="This week's card spending"
       />
     </>
   );
