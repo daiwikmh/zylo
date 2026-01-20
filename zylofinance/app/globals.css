@@ -1511,12 +1511,12 @@ body {
 }
 
 .stats-column {
-  width: 200px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .chart-column {
-  flex: 1;
+  flex: 1.5;
   min-width: 0;
 }
 

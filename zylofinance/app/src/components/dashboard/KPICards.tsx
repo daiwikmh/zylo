@@ -10,7 +10,7 @@ interface KPICardProps {
 }
 
 const KPICard = ({ icon, value, label }: KPICardProps) => (
-  <div className="bento-card span-3 kpi-card">
+  <div className="bento-card span-6 kpi-card">
     <div className="kpi-header">
       <div className="kpi-icon">{icon}</div>
       <button className="kpi-menu-btn">
