@@ -10,15 +10,21 @@
   },
   "dependencies": {
     "@etherspot/prime-sdk": "^1.9.2",
+    "@flarenetwork/flare-periphery-contract-artifacts": "^0.1.39",
     "@prisma/adapter-neon": "^7.2.0",
+    "@steerprotocol/sdk": "^1.23.2",
     "@tanstack/react-query": "^5.62.0",
+    "@uniswap/sdk-core": "^7.10.1",
+    "@uniswap/v3-sdk": "^3.27.0",
     "@web3auth/modal": "^10.12.0",
+    "ethers": "^6.16.0",
     "next": "16.1.1",
     "prisma": "^7.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "viem": "^2.21.0",
-    "wagmi": "^2.14.0"
+    "viem": "^2.44.4",
+    "wagmi": "^2.14.0",
+    "xrpl": "^4.5.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
