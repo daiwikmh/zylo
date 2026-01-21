@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
   children?: React.ReactNode;
 }
 
 export const Sidebar = ({ children }: SidebarProps) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const pathname = usePathname();
 
   return (
     <div className="sidebar-container">
@@ -25,9 +26,9 @@ export const Sidebar = ({ children }: SidebarProps) => {
           {/* Navigation Icons */}
           <div className="sidebar-nav">
             {/* Dashboard Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
+            <Link
+              href="/dashboard"
+              className={`sidebar-tab ${pathname === '/dashboard' ? 'active' : ''}`}
               title="Dashboard"
             >
               <svg
@@ -43,13 +44,13 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <rect x="14" y="14" width="7" height="7" rx="1" />
                 <rect x="3" y="14" width="7" height="7" rx="1" />
               </svg>
-            </button>
+            </Link>
 
-            {/* Analytics Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'analytics' ? 'active' : ''}`}
-              onClick={() => setActiveTab('analytics')}
-              title="Analytics"
+            {/* analytics Icon */}
+            <Link
+              href="/analytics"
+              className={`sidebar-tab ${pathname === '/analytics' ? 'active' : ''}`}
+              title="analytics"
             >
               <svg
                 width="20"
@@ -63,12 +64,12 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <line x1="18" y1="20" x2="18" y2="4" />
                 <line x1="6" y1="20" x2="6" y2="16" />
               </svg>
-            </button>
+            </Link>
 
             {/* Wallet Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'wallet' ? 'active' : ''}`}
-              onClick={() => setActiveTab('wallet')}
+            <Link
+              href="/wallet"
+              className={`sidebar-tab ${pathname === '/wallet' ? 'active' : ''}`}
               title="Wallet"
             >
               <svg
@@ -83,12 +84,12 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <path d="M2 10h20" />
                 <circle cx="16" cy="14" r="2" />
               </svg>
-            </button>
+            </Link>
 
             {/* Send/Receive Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'send' ? 'active' : ''}`}
-              onClick={() => setActiveTab('send')}
+            <Link
+              href="/send"
+              className={`sidebar-tab ${pathname === '/send' ? 'active' : ''}`}
               title="Send & Receive"
             >
               <svg
@@ -102,12 +103,12 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <path d="M7 16V4m0 0L3 8m4-4l4 4" />
                 <path d="M17 8v12m0 0l4-4m-4 4l-4-4" />
               </svg>
-            </button>
+            </Link>
 
             {/* Swap Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'swap' ? 'active' : ''}`}
-              onClick={() => setActiveTab('swap')}
+            <Link
+              href="/swap"
+              className={`sidebar-tab ${pathname === '/swap' ? 'active' : ''}`}
               title="Swap"
             >
               <svg
@@ -123,12 +124,12 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <polyline points="7 23 3 19 7 15" />
                 <path d="M21 13v2a4 4 0 0 1-4 4H3" />
               </svg>
-            </button>
+            </Link>
 
             {/* History Icon */}
-            <button
-              className={`sidebar-tab ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => setActiveTab('history')}
+            <Link
+              href="/history"
+              className={`sidebar-tab ${pathname === '/history' ? 'active' : ''}`}
               title="History"
             >
               <svg
@@ -142,16 +143,16 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* Bottom Section - Settings */}
         <div className="sidebar-bottom">
           {/* Settings Button */}
-          <button
-            className={`sidebar-tab ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+          <Link
+            href="/settings"
+            className={`sidebar-tab ${pathname === '/settings' ? 'active' : ''}`}
             title="Settings"
           >
             <svg
@@ -165,7 +166,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
 

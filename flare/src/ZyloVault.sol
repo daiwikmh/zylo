@@ -44,11 +44,11 @@ contract ZyloVault is ERC4626 {
 
     function withdrawFLR(uint256 shares) external returns (uint256 assets) {
         require(shares > 0, "Zero shares");
-        
+
         // redeem() calls internal _withdraw, which pulls funds from Module
-assets = redeem(shares, address(this), msg.sender);
+        assets = redeem(shares, msg.sender, msg.sender);
         // Unwrap WNat to native FLR
-       
+
     }
 
     // --- ERC4626 Overrides ---
