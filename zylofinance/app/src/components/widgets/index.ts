@@ -1,2 +1,2 @@
 export { TodoListWidget } from './TodoList';
-export { SendReceiveCard } from '../../components/send/SendReceiveCard';
+export { SendReceiveCard } from '../send/SendReceiveCard';

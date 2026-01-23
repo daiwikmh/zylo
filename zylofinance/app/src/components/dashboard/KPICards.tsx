@@ -2,6 +2,7 @@
 
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
+import { CHAIN_ID } from '../../utils/constants';
 
 interface KPICardProps {
   icon: React.ReactNode;
@@ -28,7 +29,7 @@ const KPICard = ({ icon, value, label }: KPICardProps) => (
 
 export const KPICards = () => {
   const { address } = useAccount();
-  const { data: balance } = useBalance({ address, chainId: 114 });
+  const { data: balance } = useBalance({ address, chainId: CHAIN_ID });
 
   const formatBalance = () => {
     if (!balance) return '$0.00';
@@ -38,17 +39,17 @@ export const KPICards = () => {
   };
 
   return (
-    <>
+    <div style={{ height: '100%' }}>
       <KPICard
         icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
         }
         value={formatBalance()}
         label="Wallet Balance"
       />
-    </>
+    </div>
   );
 };
 

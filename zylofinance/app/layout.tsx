@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./src/styles/mobile-neo-brutalist.css";
 import { AppProvider } from "./src/providers/web3auth";
 import { AuthGuard } from "./src/components/auth";
 

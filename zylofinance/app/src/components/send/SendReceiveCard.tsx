@@ -7,6 +7,15 @@ import { PrimeSdk } from '@etherspot/prime-sdk';
 import { ZYLO_VAULT_ABI } from '../../contracts/abis';
 import { CONTRACTS } from '../../contracts/config';
 import { createSpendBatch, waitForUserOpReceipt } from '../../utils/etherspot';
+import {
+  CHAIN_ID,
+  GAS_RESERVES,
+  TX_STATUS,
+  DECIMAL_PLACES,
+  EXTERNAL_LINKS,
+  getPaymasterUrl,
+  type TxStatus
+} from '../../utils/constants';
 
 interface SendReceiveCardProps {
   primeSdk?: PrimeSdk | null;
@@ -19,10 +28,11 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
   const [recipientAddress, setRecipientAddress] = useState('');
   const [sendAmount, setSendAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [txStatus, setTxStatus] = useState<TxStatus>(TX_STATUS.IDLE);
   const [errorMessage, setErrorMessage] = useState('');
   const [txHash, setTxHash] = useState('');
-  const [smartAccountAddress, setSmartAccountAddress] = useState<string>('');
+  const [smartAccountAddress, setSmartAccountAddress] =
+    useState<`0x${string}` | undefined>();
 
   // Get Smart Account address
   useEffect(() => {
@@ -30,7 +40,7 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
       if (primeSdk) {
         try {
           const smartAddr = await primeSdk.getCounterFactualAddress();
-          setSmartAccountAddress(smartAddr);
+          setSmartAccountAddress(smartAddr as `0x${string}`);
         } catch (error) {
           console.error('Failed to get smart account:', error);
         }
@@ -39,37 +49,43 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
     getSmartAccount();
   }, [primeSdk]);
 
-  // Get Smart Account C2FLR balance
-  const { data: smartAccountBalance } = useBalance({
+  // Get Smart Account C2FLR balance (NOT EOA balance!)
+  const { data: smartAccountBalance, refetch: refetchFlr } = useBalance({
     address: smartAccountAddress as `0x${string}`,
-    chainId: 114,
+    chainId: CHAIN_ID,
   });
 
   // Get yFLR balance
-  const { data: yFlrBalance } = useReadContract({
-    address: CONTRACTS.ZYLO_VAULT,
+  const { data: yFlrBalance, refetch: refetchYflr } = useReadContract({
+    address: CONTRACTS.ZYLO_VAULT as `0x${string}`,
     abi: ZYLO_VAULT_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    chainId: CHAIN_ID,
+    args: smartAccountAddress ? [smartAccountAddress] : undefined,
   });
 
-  // Convert yFLR to underlying FLR value
+  // Convert yFLR to underlying assets
   const { data: yFlrValue } = useReadContract({
-    address: CONTRACTS.ZYLO_VAULT,
+    address: CONTRACTS.ZYLO_VAULT as `0x${string}`,
     abi: ZYLO_VAULT_ABI,
     functionName: 'convertToAssets',
-    args: yFlrBalance ? [yFlrBalance as bigint] : undefined,
+    chainId: CHAIN_ID,
+    args: yFlrBalance ? [yFlrBalance] : undefined,
+    query: {
+      enabled: !!yFlrBalance,
+    },
   });
+
 
   const handleMaxClick = () => {
     if (sendMode === 'flr' && smartAccountBalance) {
-      const maxAmount = smartAccountBalance.value - parseEther('0.1');
-      if (maxAmount > 0n) {
+      const maxAmount = smartAccountBalance.value - parseEther(GAS_RESERVES.SEND_FLR);
+      if (maxAmount > BigInt(0)) {
         setSendAmount(formatEther(maxAmount));
       }
     } else if (sendMode === 'yflr' && yFlrValue) {
-      const maxAmount = (yFlrValue as bigint) - parseEther('0.05');
-      if (maxAmount > 0n) {
+      const maxAmount = (yFlrValue as bigint) - parseEther(GAS_RESERVES.SEND_YFLR);
+      if (maxAmount > BigInt(0)) {
         setSendAmount(formatEther(maxAmount));
       }
     }
@@ -86,14 +102,11 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
       return;
     }
 
-    if (!smartAccountBalance || smartAccountBalance.value === 0n) {
-      setErrorMessage('Your Smart Account has no C2FLR balance. Please send C2FLR to your Smart Account first.');
-      return;
-    }
+  
 
     try {
       setIsSending(true);
-      setTxStatus('pending');
+      setTxStatus(TX_STATUS.PENDING);
       setErrorMessage('');
 
       const amountWei = parseEther(sendAmount);
@@ -104,30 +117,36 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
           primeSdk,
           amountWei,
           recipientAddress as `0x${string}`,
-          smartAccountAddress as `0x${string}`
         );
         setTxHash(userOpHash);
         await waitForUserOpReceipt(primeSdk, userOpHash);
       } else {
-        // Direct C2FLR transfer from smart account
-        await primeSdk.clearUserOpsFromBatch();
-        await primeSdk.addUserOpsToBatch({
-          to: recipientAddress,
-          value: amountWei,
-        });
+  // Direct C2FLR transfer from smart account
+  await primeSdk.clearUserOpsFromBatch();
+  await primeSdk.addUserOpsToBatch({
+    to: recipientAddress as `0x${string}`,
+    value: amountWei,
+  });
 
-        const userOp = await primeSdk.estimate();
-        const userOpHash = await primeSdk.send(userOp);
-        setTxHash(userOpHash);
-        await waitForUserOpReceipt(primeSdk, userOpHash);
-      }
+  // MUST include paymaster here for gasless transfer
+  const userOp = await primeSdk.estimate({
+    paymasterDetails: {
+      url: getPaymasterUrl(),
+      context: { mode: 'sponsor', calculateGasLimits: true },
+    },
+  });
+  
+  const userOpHash = await primeSdk.send(userOp);
+  setTxHash(userOpHash);
+  await waitForUserOpReceipt(primeSdk, userOpHash);
+}
 
-      setTxStatus('success');
+      setTxStatus(TX_STATUS.SUCCESS);
       setSendAmount('');
       setRecipientAddress('');
     } catch (error: any) {
       console.error('Send failed:', error);
-      setTxStatus('error');
+      setTxStatus(TX_STATUS.ERROR);
       setErrorMessage(error.message || 'Transaction failed');
     } finally {
       setIsSending(false);
@@ -135,7 +154,7 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
   };
 
   const resetStatus = () => {
-    setTxStatus('idle');
+    setTxStatus(TX_STATUS.IDLE);
     setErrorMessage('');
     setTxHash('');
   };
@@ -178,16 +197,16 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
       {activeTab === 'send' ? (
         <div className="send-form">
           {/* Send Mode Toggle */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <button
               style={{
                 flex: 1,
                 padding: '0.5rem',
-                background: sendMode === 'flr' ? 'rgba(177, 205, 253, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: sendMode === 'flr' ? '1px solid var(--accent-blue)' : '1px solid rgba(255, 255, 255, 0.15)',
+                background: sendMode === 'flr' ? '#E1C4E9' : 'rgba(225, 196, 233, 0.15)',
+                border: sendMode === 'flr' ? '1px solid #E1C4E9' : '1px solid rgba(225, 196, 233, 0.3)',
                 borderRadius: '0.5rem',
-                color: sendMode === 'flr' ? 'var(--accent-blue)' : 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.75rem',
+                color: sendMode === 'flr' ? '#070709' : 'rgba(225, 196, 233, 0.7)',
+                fontSize: '0.6875rem',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
@@ -200,11 +219,11 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
               style={{
                 flex: 1,
                 padding: '0.5rem',
-                background: sendMode === 'yflr' ? 'rgba(177, 205, 253, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: sendMode === 'yflr' ? '1px solid var(--accent-blue)' : '1px solid rgba(255, 255, 255, 0.15)',
+                background: sendMode === 'yflr' ? '#E1C4E9' : 'rgba(225, 196, 233, 0.15)',
+                border: sendMode === 'yflr' ? '1px solid #E1C4E9' : '1px solid rgba(225, 196, 233, 0.3)',
                 borderRadius: '0.5rem',
-                color: sendMode === 'yflr' ? 'var(--accent-blue)' : 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.75rem',
+                color: sendMode === 'yflr' ? '#070709' : 'rgba(225, 196, 233, 0.7)',
+                fontSize: '0.6875rem',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
@@ -221,10 +240,10 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
             <span className="balance-value">
               {sendMode === 'flr'
                 ? smartAccountBalance
-                  ? `${parseFloat(formatEther(smartAccountBalance.value)).toFixed(4)} C2FLR`
+                  ? `${parseFloat(formatEther(smartAccountBalance.value)).toFixed(DECIMAL_PLACES.BALANCE)} C2FLR`
                   : '0.00 C2FLR'
                 : yFlrValue
-                ? `${parseFloat(formatEther(yFlrValue as bigint)).toFixed(4)} C2FLR (from yFLR)`
+                ? `${parseFloat(formatEther(yFlrValue as bigint)).toFixed(DECIMAL_PLACES.BALANCE)} C2FLR (from yFLR)`
                 : '0.00 C2FLR'}
             </span>
           </div>
@@ -267,14 +286,14 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
           </div>
 
           {/* Transaction Status */}
-          {txStatus === 'pending' && (
+          {txStatus === TX_STATUS.PENDING && (
             <div className="tx-status pending">
               <div className="tx-spinner" />
               <span>Processing transaction...</span>
             </div>
           )}
 
-          {txStatus === 'success' && (
+          {txStatus === TX_STATUS.SUCCESS && (
             <div className="tx-status success">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                 <polyline points="20 6 9 17 4 12" />
@@ -283,7 +302,7 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
             </div>
           )}
 
-          {txStatus === 'error' && errorMessage && (
+          {txStatus === TX_STATUS.ERROR && errorMessage && (
             <div className="send-error">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                 <circle cx="12" cy="12" r="10" />
@@ -335,7 +354,7 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
             </div>
           )}
 
-          {txStatus !== 'idle' && txStatus !== 'pending' && (
+          {txStatus !== TX_STATUS.IDLE && txStatus !== TX_STATUS.PENDING && (
             <button
               style={{
                 width: '100%',
@@ -420,7 +439,7 @@ export const SendReceiveCard = ({ primeSdk }: SendReceiveCardProps) => {
               fontSize: '0.75rem',
               color: 'rgba(255, 255, 255, 0.5)'
             }}>
-              Get test C2FLR from <a href="https://faucet.flare.network/coston2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>Coston2 Faucet</a>
+              Get test C2FLR from <a href={EXTERNAL_LINKS.COSTON2_FAUCET} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>Coston2 Faucet</a>
             </p>
           </div>
         </div>

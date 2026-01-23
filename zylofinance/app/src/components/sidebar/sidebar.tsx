@@ -68,9 +68,9 @@ export const Sidebar = ({ children }: SidebarProps) => {
 
             {/* Wallet Icon */}
             <Link
-              href="/wallet"
+              href="/fxrp"
               className={`sidebar-tab ${pathname === '/wallet' ? 'active' : ''}`}
-              title="Wallet"
+              title="fxrp"
             >
               <svg
                 width="20"

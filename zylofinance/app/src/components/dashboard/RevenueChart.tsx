@@ -23,11 +23,11 @@ export const RevenueChart = () => {
         </div>
         <div className="chart-legend">
           <div className="chart-legend-item">
-            <span className="chart-legend-dot" style={{ background: 'var(--foreground)' }} />
+            <span className="chart-legend-dot" style={{ background: '#070709' }} />
             <span>Current</span>
           </div>
           <div className="chart-legend-item">
-            <span className="chart-legend-dot" style={{ background: 'var(--text-muted)' }} />
+            <span className="chart-legend-dot" style={{ background: 'rgba(7, 7, 9, 0.5)' }} />
             <span>Prior</span>
           </div>
         </div>
@@ -45,14 +45,14 @@ export const RevenueChart = () => {
                 y1={180 - (y / maxValue) * 160}
                 x2="580"
                 y2={180 - (y / maxValue) * 160}
-                stroke="#e5e7eb"
+                stroke="rgba(7, 7, 9, 0.15)"
                 strokeWidth="1"
               />
             ))}
           </g>
 
           {/* Y-axis labels */}
-          <g className="chart-y-labels" fill="var(--text-muted)" fontSize="10">
+          <g className="chart-y-labels" fill="rgba(7, 7, 9, 0.6)" fontSize="10">
             <text x="30" y="24" textAnchor="end">20K</text>
             <text x="30" y="64" textAnchor="end">15K</text>
             <text x="30" y="104" textAnchor="end">10K</text>
@@ -66,7 +66,7 @@ export const RevenueChart = () => {
               `${40 + (i * 90)},${180 - (p.prior / maxValue) * 160}`
             ).join(' L ')}`}
             fill="none"
-            stroke="var(--text-muted)"
+            stroke="rgba(7, 7, 9, 0.4)"
             strokeWidth="2"
             strokeDasharray="4 4"
           />
@@ -77,7 +77,7 @@ export const RevenueChart = () => {
               `${40 + (i * 90)},${180 - (p.value / maxValue) * 160}`
             ).join(' L ')}`}
             fill="none"
-            stroke="var(--foreground)"
+            stroke="#070709"
             strokeWidth="2"
           />
 
@@ -88,15 +88,15 @@ export const RevenueChart = () => {
                 cx={40 + (i * 90)}
                 cy={180 - (p.value / maxValue) * 160}
                 r="4"
-                fill="var(--card-bg)"
-                stroke="var(--foreground)"
+                fill="#E1C4E9"
+                stroke="#070709"
                 strokeWidth="2"
               />
             </g>
           ))}
 
           {/* X-axis labels */}
-          <g className="chart-x-labels" fill="var(--text-muted)" fontSize="10">
+          <g className="chart-x-labels" fill="rgba(7, 7, 9, 0.6)" fontSize="10">
             {dataPoints.map((p, i) => (
               <text key={i} x={40 + (i * 90)} y="198" textAnchor="middle">{p.date}</text>
             ))}
@@ -104,8 +104,8 @@ export const RevenueChart = () => {
 
           {/* Tooltip for highlighted point */}
           <g transform="translate(490, 55)">
-            <rect x="-40" y="-20" width="80" height="30" rx="6" fill="var(--foreground)" />
-            <text x="0" y="-2" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">
+            <rect x="-40" y="-20" width="80" height="30" rx="6" fill="#070709" />
+            <text x="0" y="-2" textAnchor="middle" fill="#E1C4E9" fontSize="11" fontWeight="600">
               $1,259.79
             </text>
           </g>

@@ -7,7 +7,7 @@ import { PrimeSdk } from '@etherspot/prime-sdk';
 import { ZYLO_VAULT_ABI } from '../../contracts/abis';
 import { CONTRACTS } from '../../contracts/config';
 import { createDepositBatch, waitForUserOpReceipt } from '../../utils/etherspot';
-import { waitForUserOperationReceipt } from 'viem/account-abstraction';
+import { CHAIN_ID, GAS_RESERVES, YIELD_CONFIG, TX_STATUS, DECIMAL_PLACES, type TxStatus } from '../../utils/constants';
 
 interface YieldStakingCardProps {
   primeSdk?: PrimeSdk | null;
@@ -17,18 +17,19 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
   const { address, isConnected } = useAccount();
   const [depositAmount, setDepositAmount] = useState('');
   const [isDepositing, setIsDepositing] = useState(false);
-  const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [txStatus, setTxStatus] = useState<TxStatus>(TX_STATUS.IDLE);
   const [errorMessage, setErrorMessage] = useState('');
   const [txHash, setTxHash] = useState('');
-  const [smartAccountAddress, setSmartAccountAddress] = useState<string>('');
+  const [smartAccountAddress, setSmartAccountAddress] =
+  useState<`0x${string}` | undefined>();
 
-  // Get Smart Account address
+
   useEffect(() => {
     async function getSmartAccount() {
       if (primeSdk) {
         try {
           const smartAddr = await primeSdk.getCounterFactualAddress();
-          setSmartAccountAddress(smartAddr);
+          setSmartAccountAddress(smartAddr as `0x${string}`);
         } catch (error) {
           console.error('Failed to get smart account:', error);
         }
@@ -40,34 +41,42 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
   // Get Smart Account C2FLR balance (NOT EOA balance!)
   const { data: smartAccountBalance } = useBalance({
     address: smartAccountAddress as `0x${string}`,
-    chainId: 114,
+    chainId: CHAIN_ID,
   });
+  console.log('Smart Account Balance:', smartAccountBalance);
 
   // Get yFLR balance
   const { data: yFlrBalance, refetch: refetchYFlr } = useReadContract({
     address: CONTRACTS.ZYLO_VAULT,
     abi: ZYLO_VAULT_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    chainId: CHAIN_ID,
+    args: smartAccountAddress ? [smartAccountAddress] : undefined,
   });
+  console.log('yFlrBalance:', yFlrBalance);
 
   // Convert yFLR to underlying FLR value
   const { data: yFlrValue } = useReadContract({
     address: CONTRACTS.ZYLO_VAULT,
     abi: ZYLO_VAULT_ABI,
     functionName: 'convertToAssets',
+    chainId: CHAIN_ID,
     args: yFlrBalance ? [yFlrBalance as bigint] : undefined,
+    query: {
+      enabled: !!yFlrBalance,
+    },
   });
+  console.log('yFlrValue:', yFlrValue);
+
 
   const handleMaxClick = () => {
     if (smartAccountBalance) {
       // Reserve more C2FLR for gas (batched transactions need more gas)
-      // Reserve 0.5 C2FLR to be safe
-      const maxAmount = smartAccountBalance.value - parseEther('0.5');
+      const maxAmount = smartAccountBalance.value - parseEther(GAS_RESERVES.DEPOSIT);
       if (maxAmount > BigInt(0)) {
         setDepositAmount(formatEther(maxAmount));
       } else {
-        setErrorMessage('Not enough C2FLR for gas. Keep at least 0.5 C2FLR for gas fees.');
+        setErrorMessage(`Not enough C2FLR for gas. Keep at least ${GAS_RESERVES.DEPOSIT} C2FLR for gas fees.`);
       }
     }
   };
@@ -81,17 +90,17 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
   const amountWei = parseEther(depositAmount);
 
   // 1. UPDATED BALANCE CHECK: Only check if they have enough for the deposit itself
-  // We no longer need the 0.5 C2FLR gas reserve because the Paymaster sponsors it!
+  // We no longer need the gas reserve because the Paymaster sponsors it!
   if (!smartAccountBalance || smartAccountBalance.value < amountWei) {
     setErrorMessage(`Insufficient balance. You need ${depositAmount} C2FLR to deposit.`);
-    setTxStatus('error');
+    setTxStatus(TX_STATUS.ERROR);
     return;
-  } 
+  }
 
   try {
     setIsDepositing(true);
     setErrorMessage('');
-    setTxStatus('pending');
+    setTxStatus(TX_STATUS.PENDING);
 
     // 2. CALL THE UPDATED BATCH: 
     // This now correctly points to the 'depositFLR' function we fixed in etherspot.ts
@@ -105,9 +114,9 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
     // 3. WAIT FOR RECEIPT
     // Note: Confirmation on Flare/Coston2 usually takes 2-5 seconds
     const receipt = await waitForUserOpReceipt(primeSdk, userOpHash);
-    
+
     if (receipt.success) {
-      setTxStatus('success');
+      setTxStatus(TX_STATUS.SUCCESS);
       setDepositAmount('');
       // Refetch both balances
       refetchYFlr();
@@ -117,7 +126,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
 
   } catch (error: any) {
     console.error('Deposit failed:', error);
-    setTxStatus('error');
+    setTxStatus(TX_STATUS.ERROR);
 
     // 4. PAYMASTER-SPECIFIC ERROR HANDLING
     let errorMsg = error.message || 'Transaction failed';
@@ -135,7 +144,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
 };
 
   const resetStatus = () => {
-    setTxStatus('idle');
+    setTxStatus(TX_STATUS.IDLE);
     setErrorMessage('');
     setTxHash('');
   };
@@ -145,7 +154,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
       <div className="yield-staking-card">
         <div className="yield-staking-header">
           <h2 className="yield-staking-title">Start Earning Yield</h2>
-          <span className="yield-badge-purple">APY 12.5%</span>
+          <span className="yield-badge-purple">APY {YIELD_CONFIG.APY}%</span>
         </div>
         <div className="yield-not-connected">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -166,7 +175,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
           <h2 className="yield-staking-title">Deposit & Earn</h2>
           <p className="yield-staking-subtitle">Stake FLR to earn yFLR rewards</p>
         </div>
-        <span className="yield-badge-purple">APY 12.5%</span>
+        <span className="yield-badge-purple">APY {YIELD_CONFIG.APY}%</span>
       </div>
 
       {/* Smart Account Info */}
@@ -190,19 +199,19 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
         <div className="yield-balance-item">
           <span className="yield-balance-label">Smart Account C2FLR</span>
           <span className="yield-balance-value">
-            {smartAccountBalance ? parseFloat(formatEther(smartAccountBalance.value)).toFixed(4) : '0.00'}
+            {smartAccountBalance ? parseFloat(formatEther(smartAccountBalance.value)).toFixed(DECIMAL_PLACES.BALANCE) : '0.00'}
           </span>
         </div>
         <div className="yield-balance-item">
           <span className="yield-balance-label">Your yFLR</span>
           <span className="yield-balance-value purple">
-            {yFlrBalance ? parseFloat(formatEther(yFlrBalance as bigint)).toFixed(4) : '0.00'}
+            {yFlrBalance ? parseFloat(formatEther(yFlrBalance as bigint)).toFixed(DECIMAL_PLACES.BALANCE) : '0.00'}
           </span>
         </div>
         <div className="yield-balance-item">
           <span className="yield-balance-label">Value (C2FLR)</span>
           <span className="yield-balance-value">
-            {yFlrValue ? parseFloat(formatEther(yFlrValue as bigint)).toFixed(4) : '0.00'}
+            {yFlrValue ? parseFloat(formatEther(yFlrValue as bigint)).toFixed(DECIMAL_PLACES.BALANCE) : '0.00'}
           </span>
         </div>
       </div>
@@ -280,21 +289,21 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
       </div>
 
       {/* Transaction Status */}
-      {txStatus === 'pending' && errorMessage && errorMessage.includes('Deploying') && (
+      {txStatus === TX_STATUS.PENDING && errorMessage && errorMessage.includes('Deploying') && (
         <div className="tx-status pending">
           <div className="tx-spinner" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {txStatus === 'pending' && (!errorMessage || !errorMessage.includes('Deploying')) && (
+      {txStatus === TX_STATUS.PENDING && (!errorMessage || !errorMessage.includes('Deploying')) && (
         <div className="tx-status pending">
           <div className="tx-spinner" />
           <span>Processing deposit transaction...</span>
         </div>
       )}
 
-      {txStatus === 'success' && (
+      {txStatus === TX_STATUS.SUCCESS && (
         <div className="tx-status success">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
             <polyline points="20 6 9 17 4 12" />
@@ -303,7 +312,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
         </div>
       )}
 
-      {txStatus === 'error' && errorMessage && (
+      {txStatus === TX_STATUS.ERROR && errorMessage && (
         <div className="tx-status error">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
             <circle cx="12" cy="12" r="10" />
@@ -351,7 +360,7 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
           </svg>
           <div>
             <div className="yield-info-label">Auto-Compounding</div>
-            <div className="yield-info-value">Daily</div>
+            <div className="yield-info-value">{YIELD_CONFIG.COMPOUNDING}</div>
           </div>
         </div>
         <div className="yield-info-card">
@@ -361,13 +370,13 @@ export const YieldStakingCard = ({ primeSdk }: YieldStakingCardProps) => {
           </svg>
           <div>
             <div className="yield-info-label">Lock Period</div>
-            <div className="yield-info-value">None</div>
+            <div className="yield-info-value">{YIELD_CONFIG.LOCK_PERIOD}</div>
           </div>
         </div>
       </div>
 
       {/* Reset Status on Close */}
-      {txStatus !== 'idle' && txStatus !== 'pending' && (
+      {txStatus !== TX_STATUS.IDLE && txStatus !== TX_STATUS.PENDING && (
         <button className="yield-reset-btn" onClick={resetStatus}>
           Make Another Deposit
         </button>
