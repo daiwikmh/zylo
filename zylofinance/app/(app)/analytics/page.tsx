@@ -1,80 +1,107 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { PrimeSdk, Web3WalletProvider } from '@etherspot/prime-sdk';
-import { useWeb3Auth } from '../../src/providers/web3auth';
+import { useAccount, useConnectorClient } from 'wagmi';
+import { PrimeSdk, Web3eip1193WalletProvider } from '@etherspot/prime-sdk';
 import { YieldStakingCard } from '../../src/components/yield/YieldStakingCard';
-import { initEtherspotSDK } from '@/app/src/utils/etherspot';
+import { fetchVaultAnalytics, fetchUserYieldStats, formatNumber, type YieldAnalytics, type UserYieldStats } from '../../src/services/analyticsService';
+import { CHAIN_ID, DECIMAL_PLACES } from '../../src/utils/constants';
 
-export default function analyticsPage() {
+export default function AnalyticsPage() {
   const { address, isConnected } = useAccount();
-  const { provider: web3AuthProvider } = useWeb3Auth();
+  const { data: client } = useConnectorClient();
   const [primeSdk, setPrimeSdk] = useState<PrimeSdk | null>(null);
+  const [smartAccountAddress, setSmartAccountAddress] = useState<string>('');
+  const [vaultAnalytics, setVaultAnalytics] = useState<YieldAnalytics | null>(null);
+  const [userStats, setUserStats] = useState<UserYieldStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for yield tracking
-  const [totalAssets, setTotalAssets] = useState(125750.50);
-  const [totalYield, setTotalYield] = useState(8432.75);
-  const [yieldData, setYieldData] = useState([
-    { time: '00:00', value: 8200 },
-    { time: '04:00', value: 8250 },
-    { time: '08:00', value: 8180 },
-    { time: '12:00', value: 8350 },
-    { time: '16:00', value: 8400 },
-    { time: '20:00', value: 8432 },
-  ]);
-
-  // Initialize Etherspot SDK when connected
-   useEffect(() => {
-    if (!isConnected || !address || !web3AuthProvider) return;
-
-    let mounted = true;
-
-    (async () => {
-      try {
-        const sdk = await initEtherspotSDK(web3AuthProvider);
-        if (mounted) setPrimeSdk(sdk);
-      } catch (e) {
-        console.error("Etherspot init failed:", e);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [isConnected, address, web3AuthProvider]);
-
-  // Simulate real-time yield updates
+  // Initialize Smart Account and Etherspot SDK
   useEffect(() => {
-    const interval = setInterval(() => {
-      setYieldData(prev => {
-        const newData = [...prev];
-        const lastValue = newData[newData.length - 1].value;
-        const newValue = lastValue + (Math.random() - 0.4) * 50;
+    const initSmartAccount = async () => {
+      if (!client?.transport) return;
 
-        newData.shift();
-        newData.push({
-          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-          value: Math.max(0, newValue)
+      try {
+        const walletProvider = await Web3eip1193WalletProvider.connect(
+          client.transport as any
+        );
+
+        const sdk = new PrimeSdk(walletProvider, {
+          chainId: CHAIN_ID,
         });
 
-        setTotalYield(newValue);
-        return newData;
-      });
-    }, 5000);
+        const smartAddress = await sdk.getCounterFactualAddress();
+        setSmartAccountAddress(smartAddress);
+        setPrimeSdk(sdk);
+      } catch (error) {
+        console.error('Failed to initialize smart account:', error);
+      }
+    };
 
+    if (isConnected) {
+      initSmartAccount();
+    }
+  }, [client, isConnected]);
+
+  // Fetch analytics data
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch vault-wide analytics
+        const analytics = await fetchVaultAnalytics();
+        setVaultAnalytics(analytics);
+
+        // Fetch user-specific stats if connected
+        if (smartAccountAddress) {
+          const stats = await fetchUserYieldStats(smartAccountAddress);
+          setUserStats(stats);
+        }
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnalytics();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(loadAnalytics, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [smartAccountAddress]);
+
+  if (!isConnected) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-header-row">
+          <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#E1C4E9" strokeWidth="2" style={{ margin: '0 auto 1.5rem' }}>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#070709', marginBottom: '0.5rem' }}>
+              Connect Wallet to View Analytics
+            </h2>
+            <p style={{ color: '#232323', fontSize: '0.875rem', opacity: 0.7 }}>
+              Track your yield performance and vault statistics
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header-row">
         <div style={{ padding: '2rem 0' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--foreground)' }}>
-            Yield & Staking
+          <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', color: '#070709' }}>
+            Analytics & Performance
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Deposit FLR to earn yield and track your real-time performance
+          <p style={{ color: '#232323', fontSize: '0.875rem', opacity: 0.8 }}>
+            Real-time vault analytics and your yield performance metrics
           </p>
         </div>
       </div>
@@ -84,216 +111,204 @@ export default function analyticsPage() {
           {/* Yield Staking Card */}
           <YieldStakingCard primeSdk={primeSdk} />
 
-          {/* Stats Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-            {/* Total Assets Card */}
-            <div className="yield-card" style={{ background: '#070709', color: 'white', border: '1px solid rgba(230, 217, 253, 0.2)' }}>
-              <div className="yield-card-header">
-                <div className="yield-icon-wrapper" style={{ background: 'linear-gradient(135deg, #E6D9FD 0%, #C5B3ED 100%)' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                  </svg>
+          {loading ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#232323', opacity: 0.7 }}>
+              Loading analytics...
+            </div>
+          ) : (
+            <>
+              {/* Stats Cards Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                {/* Total Vault Assets Card */}
+                <div className="yield-card" style={{
+                  background: '#070709',
+                  color: '#E1C4E9',
+                  border: '2px solid #232323',
+                  boxShadow: '4px 4px 0px #232323'
+                }}>
+                  <div className="yield-card-header">
+                    <div className="yield-icon-wrapper" style={{ background: '#E1C4E9' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      </svg>
+                    </div>
+                    <span className="yield-badge" style={{ background: 'rgba(225, 196, 233, 0.2)', color: '#E1C4E9', border: '1px solid #E1C4E9' }}>
+                      Live
+                    </span>
+                  </div>
+                  <div className="yield-value" style={{ color: '#E1C4E9', fontFamily: 'monospace' }}>
+                    {formatNumber(vaultAnalytics?.totalAssets || 0, DECIMAL_PLACES.BALANCE)} FLR
+                  </div>
+                  <div className="yield-label" style={{ color: 'rgba(225, 196, 233, 0.7)' }}>Total Vault Assets</div>
+                  <div className="yield-info" style={{ fontSize: '0.75rem', color: 'rgba(225, 196, 233, 0.6)', marginTop: '0.5rem' }}>
+                    TVL: ${formatNumber(vaultAnalytics?.tvlUsd || 0, 2)} USD
+                  </div>
                 </div>
-                <span className="yield-badge" style={{ background: 'rgba(230, 217, 253, 0.2)', color: '#E6D9FD' }}>
-                  Live
-                </span>
-              </div>
-              <div className="yield-value" style={{ color: 'white' }}>
-                ${totalAssets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div className="yield-label" style={{ color: 'rgba(255,255,255,0.7)' }}>Total Assets</div>
-              <div className="yield-change positive" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>+12.5%</span>
-              </div>
-            </div>
 
-            {/* Total Yield Generated Card */}
-            <div className="yield-card" style={{ background: '#070709', color: 'white', border: '1px solid rgba(230, 217, 253, 0.2)' }}>
-              <div className="yield-card-header">
-                <div className="yield-icon-wrapper" style={{ background: 'linear-gradient(135deg, #E6D9FD 0%, #C5B3ED 100%)' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
+                {/* Total Yield Generated Card */}
+                <div className="yield-card" style={{
+                  background: '#070709',
+                  color: '#E1C4E9',
+                  border: '2px solid #232323',
+                  boxShadow: '4px 4px 0px #232323'
+                }}>
+                  <div className="yield-card-header">
+                    <div className="yield-icon-wrapper" style={{ background: '#E1C4E9' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                    </div>
+                    <span className="yield-badge" style={{ background: 'rgba(225, 196, 233, 0.2)', color: '#E1C4E9', border: '1px solid #E1C4E9' }}>
+                      Active
+                    </span>
+                  </div>
+                  <div className="yield-value" style={{ color: '#E1C4E9', fontFamily: 'monospace' }}>
+                    {formatNumber(vaultAnalytics?.totalYield || 0, DECIMAL_PLACES.BALANCE)} FLR
+                  </div>
+                  <div className="yield-label" style={{ color: 'rgba(225, 196, 233, 0.7)' }}>Total Yield Generated</div>
+                  <div className="yield-info" style={{ fontSize: '0.75rem', color: 'rgba(225, 196, 233, 0.6)', marginTop: '0.5rem' }}>
+                    APY: {formatNumber(vaultAnalytics?.apy || 0, 2)}%
+                  </div>
                 </div>
-                <span className="yield-badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}>
-                  Active
-                </span>
-              </div>
-              <div className="yield-value" style={{ color: 'white' }}>
-                ${totalYield.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div className="yield-label" style={{ color: 'rgba(255,255,255,0.7)' }}>Total Yield Generated</div>
-              <div className="yield-change positive" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>+8.3%</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Real-time Yield Graph */}
-          <div className="yield-graph-card" style={{ background: '#070709', color: 'white', border: '1px solid rgba(230, 217, 253, 0.2)' }}>
-            <div className="yield-graph-header" style={{ borderBottom: '1px solid rgba(230, 217, 253, 0.1)' }}>
-              <div>
-                <h2 className="yield-graph-title" style={{ color: 'white' }}>Real-Time Yield Performance</h2>
-                <p className="yield-graph-subtitle" style={{ color: 'rgba(255,255,255,0.6)' }}>Last 24 hours</p>
+                {/* User Position Card (if user has deposits) */}
+                {userStats && userStats.userShares > 0 && (
+                  <div className="yield-card" style={{
+                    background: '#070709',
+                    color: '#E1C4E9',
+                    border: '2px solid #E1C4E9',
+                    boxShadow: '4px 4px 0px #E1C4E9'
+                  }}>
+                    <div className="yield-card-header">
+                      <div className="yield-icon-wrapper" style={{ background: '#E1C4E9' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                      <span className="yield-badge" style={{ background: '#E1C4E9', color: '#070709' }}>
+                        Your Position
+                      </span>
+                    </div>
+                    <div className="yield-value" style={{ color: '#E1C4E9', fontFamily: 'monospace' }}>
+                      {formatNumber(userStats.userAssets, DECIMAL_PLACES.BALANCE)} FLR
+                    </div>
+                    <div className="yield-label" style={{ color: 'rgba(225, 196, 233, 0.7)' }}>Your Assets</div>
+                    <div className="yield-info" style={{ fontSize: '0.75rem', color: 'rgba(225, 196, 233, 0.6)', marginTop: '0.5rem' }}>
+                      Yield Earned: {formatNumber(userStats.userYieldEarned, DECIMAL_PLACES.BALANCE)} FLR ({formatNumber(userStats.userPercentageOfPool, 2)}% of pool)
+                    </div>
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#C5B3ED' }}></div>
-                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Yield</span>
+
+              {/* Vault Info Card */}
+              <div className="yield-graph-card" style={{
+                background: '#070709',
+                color: '#E1C4E9',
+                border: '2px solid #232323',
+                boxShadow: '4px 4px 0px #232323',
+                padding: '2rem'
+              }}>
+                <div className="yield-graph-header" style={{ borderBottom: '2px solid #232323', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div>
+                    <h2 className="yield-graph-title" style={{ color: '#E1C4E9', fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                      Vault Statistics
+                    </h2>
+                    <p className="yield-graph-subtitle" style={{ color: 'rgba(225, 196, 233, 0.7)', fontSize: '0.875rem' }}>
+                      Real-time vault performance metrics
+                    </p>
+                  </div>
                 </div>
-                <select
-                  style={{
-                    padding: '0.375rem 0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid rgba(230, 217, 253, 0.2)',
-                    background: 'rgba(0,0,0,0.3)',
-                    fontSize: '0.75rem',
-                    color: 'white',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option>24H</option>
-                  <option>7D</option>
-                  <option>30D</option>
-                  <option>1Y</option>
-                </select>
+
+                {/* Stats Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1.5rem'
+                }}>
+                  <div className="yield-stat" style={{
+                    padding: '1.5rem',
+                    background: '#232323',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #E1C4E9'
+                  }}>
+                    <span className="yield-stat-label" style={{ color: 'rgba(225, 196, 233, 0.7)', fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem' }}>
+                      Share Price
+                    </span>
+                    <span className="yield-stat-value" style={{ color: '#E1C4E9', fontSize: '1.5rem', fontWeight: '700', fontFamily: 'monospace', display: 'block' }}>
+                      {formatNumber(vaultAnalytics?.sharePrice || 1, 6)}
+                    </span>
+                    <span style={{ color: 'rgba(225, 196, 233, 0.6)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                      FLR per yFLR
+                    </span>
+                  </div>
+
+                  <div className="yield-stat" style={{
+                    padding: '1.5rem',
+                    background: '#232323',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #E1C4E9'
+                  }}>
+                    <span className="yield-stat-label" style={{ color: 'rgba(225, 196, 233, 0.7)', fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem' }}>
+                      Total yFLR Supply
+                    </span>
+                    <span className="yield-stat-value" style={{ color: '#E1C4E9', fontSize: '1.5rem', fontWeight: '700', fontFamily: 'monospace', display: 'block' }}>
+                      {formatNumber(vaultAnalytics?.totalShares || 0, DECIMAL_PLACES.BALANCE)}
+                    </span>
+                    <span style={{ color: 'rgba(225, 196, 233, 0.6)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                      Shares Minted
+                    </span>
+                  </div>
+
+                  <div className="yield-stat" style={{
+                    padding: '1.5rem',
+                    background: '#232323',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #E1C4E9'
+                  }}>
+                    <span className="yield-stat-label" style={{ color: 'rgba(225, 196, 233, 0.7)', fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem' }}>
+                      Current APY
+                    </span>
+                    <span className="yield-stat-value" style={{ color: '#E1C4E9', fontSize: '1.5rem', fontWeight: '700', fontFamily: 'monospace', display: 'block' }}>
+                      {formatNumber(vaultAnalytics?.apy || 0, 2)}%
+                    </span>
+                    <span style={{ color: 'rgba(225, 196, 233, 0.6)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                      Annual Percentage Yield
+                    </span>
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                <div style={{
+                  marginTop: '2rem',
+                  padding: '1.5rem',
+                  background: 'rgba(225, 196, 233, 0.1)',
+                  borderRadius: '0.75rem',
+                  border: '2px solid rgba(225, 196, 233, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E1C4E9" strokeWidth="2" style={{ flexShrink: 0, marginTop: '0.125rem' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                    <div>
+                      <p style={{ color: '#E1C4E9', fontSize: '0.875rem', lineHeight: '1.5', marginBottom: '0.5rem' }}>
+                        <strong>How it works:</strong> The vault automatically compounds your yield by reinvesting FTSO rewards.
+                        Your yFLR tokens represent your share of the growing pool, increasing in value as rewards are harvested.
+                      </p>
+                      {smartAccountAddress && (
+                        <p style={{ color: 'rgba(225, 196, 233, 0.7)', fontSize: '0.75rem', fontFamily: 'monospace', marginTop: '1rem' }}>
+                          Smart Account: {smartAccountAddress.slice(0, 10)}...{smartAccountAddress.slice(-8)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Graph Area */}
-            <div className="yield-graph-area">
-              <svg width="100%" height="280" style={{ overflow: 'visible' }}>
-                <defs>
-                  <linearGradient id="yieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#C5B3ED', stopOpacity: 0.3 }} />
-                    <stop offset="100%" style={{ stopColor: '#C5B3ED', stopOpacity: 0.05 }} />
-                  </linearGradient>
-                </defs>
-
-                {/* Grid lines */}
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <line
-                    key={i}
-                    x1="0"
-                    y1={i * 60 + 20}
-                    x2="100%"
-                    y2={i * 60 + 20}
-                    stroke="rgba(230, 217, 253, 0.1)"
-                    strokeWidth="1"
-                  />
-                ))}
-
-                {/* Y-axis labels */}
-                {[8600, 8500, 8400, 8300, 8200, 8100].map((value, i) => (
-                  <text
-                    key={i}
-                    x="10"
-                    y={i * 50 + 25}
-                    fill="rgba(255,255,255,0.6)"
-                    fontSize="10"
-                    fontWeight="500"
-                  >
-                    ${value}
-                  </text>
-                ))}
-
-                {/* Area Path */}
-                <path
-                  d={`
-                    M 60 ${260 - ((yieldData[0].value - 8100) / 500) * 240}
-                    ${yieldData.slice(1).map((d, i) => {
-                      const x = 60 + ((i + 1) * (100 / yieldData.length)) * 10;
-                      const y = 260 - ((d.value - 8100) / 500) * 240;
-                      return `L ${x} ${y}`;
-                    }).join(' ')}
-                    L ${60 + (yieldData.length - 1) * (100 / yieldData.length) * 10} 260
-                    L 60 260 Z
-                  `}
-                  fill="url(#yieldGradient)"
-                />
-
-                {/* Line Path */}
-                <path
-                  d={`
-                    M 60 ${260 - ((yieldData[0].value - 8100) / 500) * 240}
-                    ${yieldData.slice(1).map((d, i) => {
-                      const x = 60 + ((i + 1) * (100 / yieldData.length)) * 10;
-                      const y = 260 - ((d.value - 8100) / 500) * 240;
-                      return `L ${x} ${y}`;
-                    }).join(' ')}
-                  `}
-                  stroke="#C5B3ED"
-                  strokeWidth="2.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Data points */}
-                {yieldData.map((d, i) => {
-                  const x = 60 + (i * (100 / yieldData.length)) * 10;
-                  const y = 260 - ((d.value - 8100) / 500) * 240;
-                  return (
-                    <circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="4"
-                      fill="#C5B3ED"
-                      stroke="#070709"
-                      strokeWidth="2"
-                    >
-                      <title>${d.value.toFixed(2)} at {d.time}</title>
-                    </circle>
-                  );
-                })}
-
-                {/* X-axis labels */}
-                {yieldData.map((d, i) => {
-                  if (i % 1 === 0) {
-                    const x = 60 + (i * (100 / yieldData.length)) * 10;
-                    return (
-                      <text
-                        key={i}
-                        x={x}
-                        y="275"
-                        fill="rgba(255,255,255,0.6)"
-                        fontSize="10"
-                        textAnchor="middle"
-                        fontWeight="500"
-                      >
-                        {d.time}
-                      </text>
-                    );
-                  }
-                  return null;
-                })}
-              </svg>
-            </div>
-
-            {/* Stats Row */}
-            <div className="yield-stats-row" style={{ borderTop: '1px solid rgba(230, 217, 253, 0.1)' }}>
-              <div className="yield-stat">
-                <span className="yield-stat-label" style={{ color: 'rgba(255,255,255,0.6)' }}>24h Change</span>
-                <span className="yield-stat-value positive" style={{ color: '#10b981' }}>+$232.75 (2.8%)</span>
-              </div>
-              <div className="yield-stat">
-                <span className="yield-stat-label" style={{ color: 'rgba(255,255,255,0.6)' }}>Avg APY</span>
-                <span className="yield-stat-value" style={{ color: 'white' }}>12.5%</span>
-              </div>
-              <div className="yield-stat">
-                <span className="yield-stat-label" style={{ color: 'rgba(255,255,255,0.6)' }}>Peak Yield</span>
-                <span className="yield-stat-value" style={{ color: 'white' }}>$8,450.00</span>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

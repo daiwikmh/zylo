@@ -2,56 +2,64 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAccount, useConnectorClient } from 'wagmi';
+import { PrimeSdk, Web3eip1193WalletProvider } from '@etherspot/prime-sdk';
 import {
   MobileDashboard,
   ActionCards,
   GaugeWidget,
-  TransactionList,
-  BottomTabBar,
-  Transaction
+  BottomTabBar
 } from '../mobile';
-import { fetchPortfolioValue, PortfolioData } from '../../services/portfolioService';
-import { useAccount } from 'wagmi';
+import { fetchPortfolioValue } from '../../services/portfolioService';
+import { CHAIN_ID } from '../../utils/constants';
 
 export default function MobileDashboardView() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { data: client } = useConnectorClient();
   const [balance, setBalance] = useState('$0.00');
-  const [percentage, setPercentage] = useState(64);
+  const [smartAccountAddress, setSmartAccountAddress] = useState<string>('');
+  const [percentage, setPercentage] = useState(0);
 
-  // Mock transactions - replace with real API call
-  const transactions: Transaction[] = [
-    {
-      id: '1',
-      name: 'Received from Wallet',
-      date: 'Today, 2:30 PM',
-      amount: 250.00,
-      status: 'success',
-    },
-    {
-      id: '2',
-      name: 'Sent to Exchange',
-      date: 'Today, 11:15 AM',
-      amount: -89.99,
-      status: 'success',
-    },
-    {
-      id: '3',
-      name: 'Staking Reward',
-      date: 'Yesterday, 5:45 PM',
-      amount: 15.50,
-      status: 'success',
-    },
-  ];
-
+  // Initialize Smart Account
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (!address) return;
+    const initSmartAccount = async () => {
+      if (!client?.transport) return;
 
       try {
-        const portfolioData = await fetchPortfolioValue(address, address);
+        const walletProvider = await Web3eip1193WalletProvider.connect(
+          client.transport as any
+        );
+
+        const sdk = new PrimeSdk(walletProvider, {
+          chainId: CHAIN_ID,
+        });
+
+        const smartAddress = await sdk.getCounterFactualAddress();
+        setSmartAccountAddress(smartAddress);
+      } catch (error) {
+        console.error('Failed to get smart account:', error);
+      }
+    };
+
+    if (isConnected) {
+      initSmartAccount();
+    }
+  }, [client, isConnected]);
+
+  // Fetch balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address && !smartAccountAddress) return;
+
+      try {
+        const portfolioData = await fetchPortfolioValue(address, smartAccountAddress);
         const totalValue = portfolioData.grandTotalUsd;
-        setBalance(`$${totalValue.toLocaleString()}`);
+        setBalance(`$${parseFloat(totalValue).toFixed(2)}`);
+
+        // Calculate percentage based on TVL (for demo purposes, you can adjust this logic)
+        const percentageValue = Math.min((parseFloat(totalValue) / 10000) * 100, 100);
+        setPercentage(Math.floor(percentageValue));
       } catch (error) {
         console.error('Error fetching portfolio:', error);
       }
@@ -61,7 +69,7 @@ export default function MobileDashboardView() {
     // Refresh every 30 seconds
     const interval = setInterval(fetchBalance, 30000);
     return () => clearInterval(interval);
-  }, [address]);
+  }, [address, smartAccountAddress]);
 
   const handleDeposit = () => {
     router.push('/mobile-deposit');
@@ -72,30 +80,39 @@ export default function MobileDashboardView() {
   };
 
   const handleUpgrade = () => {
-    // Handle upgrade click
-    console.log('Upgrade clicked');
+    router.push('/dashboard');
+  };
+
+  const handleConnectWallet = () => {
+    // Trigger wallet connection
+    router.push('/');
   };
 
   return (
     <div className="mobile-app">
       <MobileDashboard
         balance={balance}
-        onLinkClick={() => console.log('Link clicked')}
+        smartAccountAddress={smartAccountAddress}
+        isConnected={isConnected}
+        onLinkClick={() => router.push('/fxrp')}
         onStatsClick={() => router.push('/analytics')}
+        onConnectWallet={handleConnectWallet}
       />
 
-      <ActionCards
-        onDepositClick={handleDeposit}
-        onWithdrawClick={handleWithdraw}
-      />
+      {isConnected && (
+        <>
+          <ActionCards
+            onDepositClick={handleDeposit}
+            onWithdrawClick={handleWithdraw}
+          />
 
-      <GaugeWidget
-        percentage={percentage}
-        title="Monthly Limit"
-        onUpgradeClick={handleUpgrade}
-      />
-
-      <TransactionList transactions={transactions} />
+          <GaugeWidget
+            percentage={percentage}
+            title="Portfolio Growth"
+            onUpgradeClick={handleUpgrade}
+          />
+        </>
+      )}
 
       <BottomTabBar />
     </div>

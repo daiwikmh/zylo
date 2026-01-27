@@ -62,58 +62,166 @@ export default function FXRPPage() {
   };
 
   return (
-    <div className="fxrp-container">
-      <div className="fxrp-header">
+    <div className="fxrp-container" style={{ padding: '2rem' }}>
+      <div className="fxrp-header" style={{ marginBottom: '2rem' }}>
         <div>
-          <h1 className="fxrp-title">Mint testFXRP</h1>
-          <p className="fxrp-subtitle">
+          <h1 className="fxrp-title" style={{
+            fontSize: '2.5rem',
+            fontWeight: '700',
+            color: '#070709',
+            marginBottom: '0.5rem'
+          }}>
+            Mint testFXRP
+          </h1>
+          <p className="fxrp-subtitle" style={{
+            fontSize: '1rem',
+            color: '#232323',
+            opacity: 0.8
+          }}>
             Mint FAssets backed by XRP on the Flare Network
           </p>
         </div>
-        <div className="fxrp-progress">
-          <div className={`fxrp-progress-step ${currentStep >= 1 ? 'active' : ''}`}>
-            <div className="fxrp-progress-circle">1</div>
-            <span>Reserve</span>
+        <div className="fxrp-progress" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          marginTop: '1.5rem'
+        }}>
+          <div className={`fxrp-progress-step ${currentStep >= 1 ? 'active' : ''}`} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <div className="fxrp-progress-circle" style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: currentStep >= 1 ? '#070709' : '#E1C4E9',
+              color: currentStep >= 1 ? '#E1C4E9' : '#070709',
+              border: '2px solid #070709',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '700',
+              fontSize: '1.125rem'
+            }}>1</div>
+            <span style={{
+              fontWeight: '600',
+              color: currentStep >= 1 ? '#070709' : '#232323',
+              opacity: currentStep >= 1 ? 1 : 0.6
+            }}>Reserve</span>
           </div>
-          <div className="fxrp-progress-line" />
-          <div className={`fxrp-progress-step ${currentStep >= 2 ? 'active' : ''}`}>
-            <div className="fxrp-progress-circle">2</div>
-            <span>Transfer</span>
+          <div className="fxrp-progress-line" style={{
+            width: '40px',
+            height: '2px',
+            background: currentStep >= 2 ? '#070709' : '#E1C4E9'
+          }} />
+          <div className={`fxrp-progress-step ${currentStep >= 2 ? 'active' : ''}`} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <div className="fxrp-progress-circle" style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: currentStep >= 2 ? '#070709' : '#E1C4E9',
+              color: currentStep >= 2 ? '#E1C4E9' : '#070709',
+              border: '2px solid #070709',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '700',
+              fontSize: '1.125rem'
+            }}>2</div>
+            <span style={{
+              fontWeight: '600',
+              color: currentStep >= 2 ? '#070709' : '#232323',
+              opacity: currentStep >= 2 ? 1 : 0.6
+            }}>Transfer</span>
           </div>
         </div>
       </div>
 
       <div className="fxrp-content">
         {/* Info Card */}
-        <div className="fxrp-info-card" style={{ background: '#E6D9FD' }}>
-          <div className="fxrp-info-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="fxrp-info-card" style={{
+          background: '#E1C4E9',
+          border: '2px solid #070709',
+          boxShadow: '6px 6px 0px #070709',
+          borderRadius: '1rem',
+          padding: '2rem'
+        }}>
+          <div className="fxrp-info-header" style={{ marginBottom: '1.5rem' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2.5">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 16v-4" />
               <path d="M12 8h.01" />
             </svg>
-            <h3>How It Works</h3>
+            <h3 style={{ color: '#070709', fontSize: '1.5rem', fontWeight: '700' }}>How It Works</h3>
           </div>
           <div className="fxrp-info-content">
-            <div className="fxrp-info-step">
-              <div className="fxrp-info-number">1</div>
+            <div className="fxrp-info-step" style={{ marginBottom: '1.5rem' }}>
+              <div className="fxrp-info-number" style={{
+                background: '#070709',
+                color: '#E1C4E9',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '1.25rem',
+                flexShrink: 0
+              }}>1</div>
               <div>
-                <h4>Reserve Collateral</h4>
-                <p>Choose your lot size and pay the Collateral Reservation Fee (CRF) from your Smart Account.</p>
+                <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Reserve Collateral</h4>
+                <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                  Choose your lot size and pay the Collateral Reservation Fee (CRF) from your Smart Account.
+                </p>
+              </div>
+            </div>
+            <div className="fxrp-info-step" style={{ marginBottom: '1.5rem' }}>
+              <div className="fxrp-info-number" style={{
+                background: '#070709',
+                color: '#E1C4E9',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '1.25rem',
+                flexShrink: 0
+              }}>2</div>
+              <div>
+                <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Send XRP Payment</h4>
+                <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                  Use Xaman wallet to send the required XRP amount to the agent's address with the payment reference.
+                </p>
               </div>
             </div>
             <div className="fxrp-info-step">
-              <div className="fxrp-info-number">2</div>
+              <div className="fxrp-info-number" style={{
+                background: '#070709',
+                color: '#E1C4E9',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '1.25rem',
+                flexShrink: 0
+              }}>3</div>
               <div>
-                <h4>Send XRP Payment</h4>
-                <p>Use Xaman wallet to send the required XRP amount to the agent's address with the payment reference.</p>
-              </div>
-            </div>
-            <div className="fxrp-info-step">
-              <div className="fxrp-info-number">3</div>
-              <div>
-                <h4>Receive testFXRP</h4>
-                <p>Once confirmed, you'll receive testFXRP tokens in your wallet that represent your XRP on Flare.</p>
+                <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Receive testFXRP</h4>
+                <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                  Once confirmed, you'll receive testFXRP tokens in your wallet that represent your XRP on Flare.
+                </p>
               </div>
             </div>
           </div>
@@ -151,24 +259,75 @@ export default function FXRPPage() {
       </div>
 
       {/* FAQ Section */}
-      <div className="fxrp-faq-section">
-        <h3 className="fxrp-faq-title">Frequently Asked Questions</h3>
-        <div className="fxrp-faq-grid">
-          <div className="fxrp-faq-item">
-            <h4>What is a lot?</h4>
-            <p>A lot is the standard unit for FAsset minting. 1 lot = 10 XRP. You can mint multiple lots at once.</p>
+      <div className="fxrp-faq-section" style={{ marginTop: '3rem' }}>
+        <h3 className="fxrp-faq-title" style={{
+          fontSize: '2rem',
+          fontWeight: '700',
+          color: '#070709',
+          marginBottom: '2rem'
+        }}>
+          Frequently Asked Questions
+        </h3>
+        <div className="fxrp-faq-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '1.5rem'
+        }}>
+          <div className="fxrp-faq-item" style={{
+            background: '#E1C4E9',
+            border: '2px solid #070709',
+            boxShadow: '4px 4px 0px #070709',
+            borderRadius: '0.75rem',
+            padding: '1.5rem'
+          }}>
+            <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.75rem' }}>
+              What is a lot?
+            </h4>
+            <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+              A lot is the standard unit for FAsset minting. 1 lot = 10 XRP. You can mint multiple lots at once.
+            </p>
           </div>
-          <div className="fxrp-faq-item">
-            <h4>What is the CRF?</h4>
-            <p>The Collateral Reservation Fee (CRF) is a small fee paid to reserve collateral from an agent. It's refundable if you complete the minting process.</p>
+          <div className="fxrp-faq-item" style={{
+            background: '#E1C4E9',
+            border: '2px solid #070709',
+            boxShadow: '4px 4px 0px #070709',
+            borderRadius: '0.75rem',
+            padding: '1.5rem'
+          }}>
+            <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.75rem' }}>
+              What is the CRF?
+            </h4>
+            <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+              The Collateral Reservation Fee (CRF) is a small fee paid to reserve collateral from an agent. It's refundable if you complete the minting process.
+            </p>
           </div>
-          <div className="fxrp-faq-item">
-            <h4>Why do I need Xaman?</h4>
-            <p>Xaman (formerly Xumm) is a secure XRP wallet needed to send the XRP payment with the correct payment reference.</p>
+          <div className="fxrp-faq-item" style={{
+            background: '#E1C4E9',
+            border: '2px solid #070709',
+            boxShadow: '4px 4px 0px #070709',
+            borderRadius: '0.75rem',
+            padding: '1.5rem'
+          }}>
+            <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.75rem' }}>
+              Why do I need Xaman?
+            </h4>
+            <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+              Xaman (formerly Xumm) is a secure XRP wallet needed to send the XRP payment with the correct payment reference.
+            </p>
           </div>
-          <div className="fxrp-faq-item">
-            <h4>How long does minting take?</h4>
-            <p>After sending XRP, the minting process typically completes within 5-10 minutes once the transaction is confirmed on the XRP Ledger.</p>
+          <div className="fxrp-faq-item" style={{
+            background: '#E1C4E9',
+            border: '2px solid #070709',
+            boxShadow: '4px 4px 0px #070709',
+            borderRadius: '0.75rem',
+            padding: '1.5rem'
+          }}>
+            <h4 style={{ color: '#070709', fontWeight: '700', fontSize: '1.125rem', marginBottom: '0.75rem' }}>
+              How long does minting take?
+            </h4>
+            <p style={{ color: '#232323', fontSize: '0.875rem', lineHeight: '1.5' }}>
+              After sending XRP, the minting process typically completes within 5-10 minutes once the transaction is confirmed on the XRP Ledger.
+            </p>
           </div>
         </div>
       </div>

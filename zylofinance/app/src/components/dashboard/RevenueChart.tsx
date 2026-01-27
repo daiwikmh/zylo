@@ -1,24 +1,69 @@
 "use client";
 
-export const RevenueChart = () => {
-  // Sample data points for the chart
-  const dataPoints = [
-    { date: 'Feb 14', value: 60, prior: 40 },
-    { date: 'Feb 15', value: 75, prior: 55 },
-    { date: 'Feb 16', value: 65, prior: 50 },
-    { date: 'Feb 17', value: 85, prior: 60 },
-    { date: 'Feb 18', value: 70, prior: 55 },
-    { date: 'Feb 19', value: 90, prior: 65 },
-    { date: 'Feb 20', value: 80, prior: 70 },
-  ];
+import { useEffect, useState } from 'react';
 
-  const maxValue = 100;
+interface DataPoint {
+  date: string;
+  value: number;
+  prior: number;
+}
+
+export const RevenueChart = () => {
+  const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
+  const [maxValue, setMaxValue] = useState(100);
+
+  useEffect(() => {
+    // TODO: Fetch real chart data from API
+    // For now, showing empty state
+    setDataPoints([]);
+  }, []);
+
+  if (dataPoints.length === 0) {
+    return (
+      <div className="bento-card chart-card" style={{
+        background: '#E1C4E9',
+        border: '2px solid #070709',
+        boxShadow: '4px 4px 0px #070709',
+        borderRadius: '1rem',
+        padding: '1.5rem'
+      }}>
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title" style={{ color: '#070709', fontWeight: '700', fontSize: '1.25rem' }}>
+              Yield Performance
+            </h3>
+            <p className="chart-subtitle" style={{ color: '#232323', fontSize: '0.875rem', opacity: 0.7 }}>
+              Track your earnings over time
+            </p>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '3rem 2rem',
+          minHeight: '200px',
+          gap: '1rem'
+        }}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#070709" strokeWidth="2" style={{ opacity: 0.3 }}>
+            <line x1="12" y1="20" x2="12" y2="10" />
+            <line x1="18" y1="20" x2="18" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="16" />
+          </svg>
+          <p style={{ fontSize: '0.875rem', color: '#232323', textAlign: 'center', opacity: 0.6 }}>
+            Start depositing to see your yield performance chart
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bento-card chart-card">
       <div className="chart-header">
         <div>
-          <h3 className="chart-title">Revenue</h3>
+          <h3 className="chart-title">Yield Performance</h3>
           <p className="chart-subtitle">Last 7 days VS prior week</p>
         </div>
         <div className="chart-legend">
@@ -53,10 +98,8 @@ export const RevenueChart = () => {
 
           {/* Y-axis labels */}
           <g className="chart-y-labels" fill="rgba(7, 7, 9, 0.6)" fontSize="10">
-            <text x="30" y="24" textAnchor="end">20K</text>
-            <text x="30" y="64" textAnchor="end">15K</text>
-            <text x="30" y="104" textAnchor="end">10K</text>
-            <text x="30" y="144" textAnchor="end">5K</text>
+            <text x="30" y="24" textAnchor="end">Max</text>
+            <text x="30" y="104" textAnchor="end">Mid</text>
             <text x="30" y="184" textAnchor="end">0</text>
           </g>
 
@@ -100,14 +143,6 @@ export const RevenueChart = () => {
             {dataPoints.map((p, i) => (
               <text key={i} x={40 + (i * 90)} y="198" textAnchor="middle">{p.date}</text>
             ))}
-          </g>
-
-          {/* Tooltip for highlighted point */}
-          <g transform="translate(490, 55)">
-            <rect x="-40" y="-20" width="80" height="30" rx="6" fill="#070709" />
-            <text x="0" y="-2" textAnchor="middle" fill="#E1C4E9" fontSize="11" fontWeight="600">
-              $1,259.79
-            </text>
           </g>
         </svg>
       </div>
