@@ -87,7 +87,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
             </Link>
 
             {/* Send/Receive Icon */}
-            <Link
+            {/* <Link
               href="/send"
               className={`sidebar-tab ${pathname === '/send' ? 'active' : ''}`}
               title="Send & Receive"
@@ -103,10 +103,10 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <path d="M7 16V4m0 0L3 8m4-4l4 4" />
                 <path d="M17 8v12m0 0l4-4m-4 4l-4-4" />
               </svg>
-            </Link>
+            </Link> */}
 
             {/* Swap Icon */}
-            <Link
+            {/* <Link
               href="/swap"
               className={`sidebar-tab ${pathname === '/swap' ? 'active' : ''}`}
               title="Swap"
@@ -124,10 +124,10 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <polyline points="7 23 3 19 7 15" />
                 <path d="M21 13v2a4 4 0 0 1-4 4H3" />
               </svg>
-            </Link>
+            </Link> */}
 
             {/* History Icon */}
-            <Link
+            {/* <Link
               href="/history"
               className={`sidebar-tab ${pathname === '/history' ? 'active' : ''}`}
               title="History"
@@ -143,7 +143,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-            </Link>
+            </Link> */}
           </div>
         </div>
 
