@@ -44,7 +44,6 @@ export const Dashboard = () => {
   }, [isConnected, address, web3AuthProvider]);
 
 
-
   // Render web version
   return (
     <div className="dashboard-container">
