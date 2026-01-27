@@ -192,7 +192,7 @@ export const FAssetReservationCard = ({
         // Calculate total XRP amount (value + fee in UBA/drops)
         const totalUBA = Number(eventData.valueUBA) + Number(eventData.feeUBA);
         const totalXRP = totalUBA / 1_000_000; // Convert drops to XRP
-
+        console.log(`Total XRP to send: ${totalXRP} XRP`);
         const reservationData: ReservationData = {
           paymentReference: eventData.paymentReference as string,
           agentUnderlyingAddress: eventData.paymentAddress as string, // This is the XRP address from event

@@ -34,8 +34,8 @@ export async function POST(request: Request) {
       throw new Error('Xaman SDK payload API not available');
     }
 
-    // Convert XRP to drops (1 XRP = 1,000,000 drops)
-    const amountInDrops = String(Math.floor(totalAmountXRP));
+    // Convert XRP to drops (multiply by 1,000,000) - Xumm expects drops as string
+    const amountInDrops = String(Math.floor(totalAmountXRP * 1_000_000));
 
     // Remove 0x prefix and trailing zeros from payment reference
     let memoDataHex = paymentReference.startsWith('0x')
@@ -46,9 +46,9 @@ export async function POST(request: Request) {
     console.log('Creating Xaman payload:', {
       destination: agentUnderlyingAddress,
       amount: amountInDrops,
+      amountXRP: totalAmountXRP,
       memo: memoDataHex
     });
-    console.log("",amountInDrops);
 
     // Create the payload using createAndSubscribe
     const { created, resolved } = await xumm.payload.createAndSubscribe(
