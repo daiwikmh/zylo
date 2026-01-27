@@ -63,7 +63,7 @@ export async function fetchVaultAnalytics(): Promise<YieldAnalytics> {
     const totalShares = await client.readContract({
       address: CONTRACTS.ZYLO_VAULT,
       abi: ZYLO_VAULT_ABI,
-      functionName: 'totalSupply',
+      functionName: 'totalAssets',
     }) as bigint;
 
     const totalAssetsNum = parseFloat(formatEther(totalAssets));
@@ -134,7 +134,7 @@ export async function fetchUserYieldStats(
     const totalShares = await client.readContract({
       address: CONTRACTS.ZYLO_VAULT,
       abi: ZYLO_VAULT_ABI,
-      functionName: 'totalSupply',
+      functionName: 'totalAssets',
     }) as bigint;
 
     const userSharesNum = parseFloat(formatEther(userShares));

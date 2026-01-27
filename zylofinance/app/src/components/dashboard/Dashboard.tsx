@@ -6,7 +6,6 @@ import { PrimeSdk } from '@etherspot/prime-sdk';
 import { isMobile } from '../../utils/platform';
 import { useWeb3Auth } from '../../providers/web3auth';
 import { initEtherspotSDK } from '../../utils/etherspot';
-import MobileDashboardView from './MobileDashboardView';
 import { Header } from '../header';
 import { KPICards } from './KPICards';
 import { RevenueChart } from './RevenueChart';
@@ -44,10 +43,7 @@ export const Dashboard = () => {
     };
   }, [isConnected, address, web3AuthProvider]);
 
-  // Render mobile version for native apps
-  if (isNative) {
-    return <MobileDashboardView />;
-  }
+
 
   // Render web version
   return (
