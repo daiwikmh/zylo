@@ -10,7 +10,7 @@ import {
 export const Header = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { isConnected } = useWeb3Auth();
-  const { user } = useWeb3AuthUser();
+const { userInfo } = useWeb3AuthUser();
   const { disconnect, loading: isDisconnecting } = useWeb3AuthDisconnect();
 
   const handleLogout = async () => {
@@ -30,7 +30,7 @@ export const Header = () => {
     return 'Good evening';
   };
 
-  const userName = user?.name || 'User';
+  const userName = userInfo?.name || 'User';
 
   return (
     <header className="dashboard-header">
@@ -70,8 +70,8 @@ export const Header = () => {
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
             {isConnected && <span className="profile-status-dot" />}
-            {user?.profileImage ? (
-              <img src={user.profileImage} alt="Profile" className="header-profile-img" />
+            {userInfo?.profileImage ? (
+              <img src={userInfo.profileImage} alt="Profile" className="header-profile-img" />
             ) : (
               <div className="header-profile-placeholder">
                 {userName.charAt(0).toUpperCase()}
@@ -84,15 +84,15 @@ export const Header = () => {
             <div className="header-profile-dropdown">
               <div className="profile-dropdown-header">
                 <div className="profile-dropdown-avatar">
-                  {user?.profileImage ? (
-                    <img src={user.profileImage} alt="Profile" />
+                  {userInfo?.profileImage ? (
+                    <img src={userInfo.profileImage} alt="Profile" />
                   ) : (
                     <span>{userName.charAt(0).toUpperCase()}</span>
                   )}
                 </div>
                 <div className="profile-dropdown-info">
                   <span className="profile-dropdown-name">{userName}</span>
-                  {user?.email && <span className="profile-dropdown-email">{user.email}</span>}
+                  {userInfo?.email && <span className="profile-dropdown-email">{userInfo.email}</span>}
                 </div>
               </div>
 
