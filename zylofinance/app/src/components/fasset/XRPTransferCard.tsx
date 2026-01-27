@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { generateXamanPayload, testXamanConnection, type XamanPaymentPayload } from '../../services/xamanService';
+import { generateXamanPayload, type XamanPaymentPayload } from '../../services/xamanService';
 import { formatPaymentReferenceForMemo } from '../../utils/etherspot';
 import type { ReservationData } from './FAssetReservationCard';
 
@@ -28,11 +28,6 @@ export const XRPTransferCard = ({
       setIsLoading(true);
       setError('');
 
-      // Test connection first
-      console.log('Testing Xaman SDK connection...');
-      await testXamanConnection();
-      console.log('Xaman SDK connected successfully!');
-
       const payload: XamanPaymentPayload = {
         agentUnderlyingAddress: reservationData.agentUnderlyingAddress,
         totalAmountXRP: reservationData.totalAmountXRP,
@@ -44,15 +39,7 @@ export const XRPTransferCard = ({
       setDeepLink(result.deepLink);
     } catch (err: any) {
       console.error('Failed to generate Xaman payload:', err);
-
-      // Better error messages
-      if (err.message?.includes('not configured') || err.message?.includes('API Key')) {
-        setError('Xaman API credentials not configured. Please add NEXT_PUBLIC_XUMM_API_KEY and NEXT_PUBLIC_XUMM_API_SECRET to .env.local');
-      } else if (err.message?.includes('ping')) {
-        setError('Unable to connect to Xaman API. Please check your API credentials.');
-      } else {
-        setError('Failed to generate payment request: ' + err.message);
-      }
+      setError('Failed to generate payment request. Please try again.');
     } finally {
       setIsLoading(false);
     }

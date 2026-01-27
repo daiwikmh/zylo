@@ -28,6 +28,7 @@
         "viem": "^2.44.4",
         "wagmi": "^2.14.0",
         "xrpl": "^4.5.0",
+        "xumm": "^1.8.0",
         "xumm-sdk": "^1.11.2",
       },
       "devDependencies": {
@@ -1295,6 +1296,8 @@
     "crossws": ["crossws@0.3.5", "", { "dependencies": { "uncrypto": "^0.1.3" } }, "sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA=="],
 
     "crypt": ["crypt@0.0.2", "", {}, "sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow=="],
+
+    "crypto-js": ["crypto-js@4.2.0", "", {}, "sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q=="],
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
 
@@ -2678,7 +2681,15 @@
 
     "xtend": ["xtend@4.0.2", "", {}, "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="],
 
+    "xumm": ["xumm@1.8.0", "", { "dependencies": { "buffer": "^6.0.3", "events": "^3.3.0", "xumm-oauth2-pkce": "^2.8.3", "xumm-sdk": "^1.11.2", "xumm-xapp-sdk": "^1.7.2" } }, "sha512-KTNnNR3vWZ46TV0ucUu2qdLz+/28tuUBgzEudDC7uOG/WmKvy1/MSYxAKrDFHkCFW5nPmJK2UyWopDsHH0RJag=="],
+
+    "xumm-js-pkce": ["xumm-js-pkce@1.0.2", "", { "dependencies": { "crypto-js": "^4.0.0" } }, "sha512-hcadf2mHYBd6vCaKtQhcLJJjoG+1XIIbh2mq+QthheoRHAf3k/gqQNDnVqJnANTK7NBKo7GJWnY2yCkYj/AQzQ=="],
+
+    "xumm-oauth2-pkce": ["xumm-oauth2-pkce@2.8.7", "", { "dependencies": { "debug": "^4.1.1", "events": "^3.3.0", "xumm-js-pkce": "^1.0.2", "xumm-sdk": "^1.11.0" } }, "sha512-gvy3L4WfQAWH9IRiaEOa2TRVDoxXGkzDRYdtVPrAygyo2kB/b216YxqraYWFxW90ngvA1/s8ze0TOtBmzvcmtA=="],
+
     "xumm-sdk": ["xumm-sdk@1.11.2", "", { "dependencies": { "@types/websocket": "^1.0.5", "assert": "^2.0.0", "bignumber.js": "^9.0.0", "buffer": "^6.0.3", "debug": "^4.1.1", "events": "^3.3.0", "fetch-ponyfill": "^7.1.0", "node-fetch": "^2.6.1", "os-browserify": "^0.3.0", "websocket": "^1.0.34" } }, "sha512-yCS7o0hd36Ijg+FeIYB4ghnx/26kcmnN1ngvTiFzoXY3j/qmTvtlFmuvAwp58kwFM3LIhz3F7XTZjG+CqVheOQ=="],
+
+    "xumm-xapp-sdk": ["xumm-xapp-sdk@1.7.2", "", { "dependencies": { "debug": "^4.1.1", "events": "^3.3.0" } }, "sha512-kiJAbA+F4gRNRux1zZ+PYJNko9fI4Y8EFf/4EMX4tPcdQEQyXfIMPj7l6tgwSNRy2sISbw2jUYDMayL+ZFlmOg=="],
 
     "y18n": ["y18n@5.0.8", "", {}, "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA=="],
 

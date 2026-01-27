@@ -37,6 +37,7 @@
     "viem": "^2.44.4",
     "wagmi": "^2.14.0",
     "xrpl": "^4.5.0",
+    "xumm": "^1.8.0",
     "xumm-sdk": "^1.11.2"
   },
   "devDependencies": {
