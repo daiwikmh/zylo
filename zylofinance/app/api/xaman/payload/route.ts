@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     console.log('Payload QR:', created.refs?.qr_png);
 
     // Extract QR code URL - try multiple possible paths
-    const qrUrl = created.refs?.qr_png || created.refs?.qr || created.qr_png || '';
+    const qrUrl = created.refs?.qr_png || '';
     const deepLink = created.next?.always || created.next || '';
 
     console.log('Xaman payload created:', {
